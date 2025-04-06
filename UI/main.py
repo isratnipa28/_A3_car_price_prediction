@@ -124,14 +124,18 @@ app.layout = html.Div(
     }
 )
 
-def prediction(year: float, km_driven: float, mileage: float ,engine: float) -> float:
+
+    
+def prediction(year: float, km_driven: float, mileage: float ,engine: float):
     try:
-        # model = pickle.load(open('car_prediction.model', 'rb'))
+        print("Type of np:", type(np))
         data = np.array([[year, km_driven, mileage, engine]])
-        prediction = np.exp(model.predict(data))
-        return prediction  # Accessing the first element
+        prediction = model.predict(data)
+        return prediction
     except Exception as e:
         raise ValueError(f"Prediction error: {str(e)}")
+
+
 
 def getDefaultValue():
     try:
@@ -146,7 +150,7 @@ def getDefaultValue():
         df = df[(df['fuel'] != 'CNG') & (df['fuel'] != 'LPG')]
         df['mileage'] = df['mileage'].str.split().str[0].astype(float)
         df['engine'] = df['engine'].str.split().str[0].str.replace('CC', '').astype(float)
-        df['max_power'] = df['max_power'].str.replace('bhp', '').str.extract('(\d+\.?\d*)').astype(float)
+        df['max_power'] = df['max_power'].str.replace('bhp', '').str.extract(r'(\d+\.?\d*)').astype(float)
         df['name'] = df['name'].str.split().str[0]
         df = df.drop(columns=['torque'])
         df = df[df['owner'] != 5]
@@ -175,31 +179,26 @@ def get_X(user_year, user_km_driven, user_mileage, user_engine):
     [State('year', 'value'),
      State('km_driven', 'value'),
      State('mileage', 'value'),
-     State('engine', 'value')
-    ]
+     State('engine', 'value')]
 )
-def update_output(n_clicks, user_year, user_km_driven, user_mileage, user_engine):
 
-    prediction_label = {
-        0: "Cheap",
-        1: "Affordable",
-        2: "Expensive",
-        3: "Very Expensive"
-    }
+
+def update_output(n_clicks, user_year, user_km_driven, user_mileage, user_engine):
+    prediction_label = {0: "Cheap", 1: "Affordable", 2: "Expensive", 3: "Very Expensive"}
     try:
         if n_clicks > 0:
-  
             user_year, user_km_driven, user_mileage, user_engine = get_X(user_year, user_km_driven, user_mileage, user_engine)
-            
-            pred_val = prediction(float(user_year), float(user_km_driven),float(user_km_driven), float(user_year))
-            
-            return f" Predicted Price: {prediction_label[pred_val[0]]}"
+            pred_val = prediction(float(user_year), float(user_km_driven), float(user_mileage), float(user_engine))
+            if not isinstance(pred_val, (list, np.ndarray)) or len(pred_val) == 0:
+                raise ValueError("Invalid prediction output")
+            pred_class = int(pred_val[0])
+            return f"Predicted Price: {prediction_label.get(pred_class, 'Unknown')}"
     except Exception as e:
-        return f"Error in prediction: {str(e)}"
-    
+        return f"Error in prediction: {str(e)}"  # Removed "Mank" typo
     return 'Click "Submit" to view the predicted price.'
+
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', debug=True, port=8050)
 
-    

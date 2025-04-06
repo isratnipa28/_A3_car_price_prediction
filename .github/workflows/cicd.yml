@@ -61,6 +61,6 @@ jobs:
           proxy_key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
             docker pull isratnipa/carpredictionthree:latest
-            docker compose -f st124984/docker-compose.yml down --remove-orphans
-            docker compose -f st124984/docker-compose.yml up -d
+            docker compose -f st124984/docker-compose.yaml down --remove-orphans
+            docker compose -f st124984/docker-compose.yaml up -d
           debug: true
